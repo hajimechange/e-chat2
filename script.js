@@ -5,11 +5,11 @@ const GEMINI_API_KEY = "AIzaSyA8sUHrIX8Hpno-g2-v4rbuaTROAYobXeI";
 
 // Google Gen AI SDKをインポート (npm install @google/genai が必要)
 // 開発サーバーで動作させる必要があります (例: `npx http-server` など)
-import { GoogleGenAI } from '@google/genai';
 
 // APIクライアントの初期化
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-const model = "gemini-2.5-flash"; // 応答速度と会話に適したモデルを選択
+// 修正後: グローバルにロードされた 'googleGenerativeAI' オブジェクトを使用
+const ai = new googleGenerativeAI.GoogleGenAI({ apiKey: GEMINI_API_KEY });
+const model = "gemini-2.5-flash";
 
 // DOM要素の取得
 const chatBox = document.getElementById('chatBox');
