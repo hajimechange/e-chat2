@@ -1,15 +1,16 @@
 // 【重要】
 // 開発のためにここに直接記述していますが、本番環境では絶対に避けてください。
 // 環境変数やバックエンドサーバーを使ってキーを秘匿する必要があります。
+// 💡 【修正点１】この行を削除しました。ブラウザでそのまま実行するとエラーになります。
+// import { GoogleGenAI } from '@google/genai'; 
+
+// 【重要】APIキーは必ずご自身のキーに置き換えてください
 const GEMINI_API_KEY = "AIzaSyA8sUHrIX8Hpno-g2-v4rbuaTROAYobXeI";
 
-// Google Gen AI SDKをインポート (npm install @google/genai が必要)
-// 開発サーバーで動作させる必要があります (例: `npx http-server` など)
-
-// APIクライアントの初期化
-// 修正後: グローバルにロードされた 'googleGenerativeAI' オブジェクトを使用
+// Google Gen AI SDKを初期化
+// 💡 【修正点２】グローバル変数 googleGenerativeAI を使用
 const ai = new googleGenerativeAI.GoogleGenAI({ apiKey: GEMINI_API_KEY });
-const model = "gemini-2.5-flash";
+const model = "gemini-2.5-flash"; 
 
 // DOM要素の取得
 const chatBox = document.getElementById('chatBox');
@@ -22,12 +23,18 @@ const recognition = SpeechRecognition ? new SpeechRecognition() : null;
 const synth = window.speechSynthesis;
 
 // 認識設定
-if (recognition) {
-    recognition.lang = 'ja-JP'; // 日本語を設定
-    recognition.interimResults = false; // 途中結果は不要
-    recognition.maxAlternatives = 1; // 最も可能性の高い結果のみ
-}
-// AP
+if (!recognition) {
+    // recognitionが null の場合、ブラウザはAPIをサポートしていません
+    statusText.textContent = "お使いのブラウザは音声認識をサポートしていません。";
+    micButton.disabled = true;
+} else {
+    // 💡 このリスナーが実行されればボタンは反応します
+    micButton.addEventListener('click', () => { 
+        if (micButton.classList.contains('recording')) {
+            recognition.stop();
+        } else {
+            startRecognition();
+        }
 // ----------------------------------------------------
 // UI操作とメッセージ表示
 // ----------------------------------------------------
