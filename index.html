@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI音声チャット (Gemini)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="chat-container">
+        <header>AI チャット</header>
+        <div class="chat-box" id="chatBox">
+            <div class="message system-message">
+                <p>こんにちは！マイクボタンを押して話しかけてください。</p>
+            </div>
+        </div>
+        <div class="input-area">
+            <button id="micButton">🎙️</button>
+            <span id="statusText">待機中...</span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
