@@ -1,16 +1,11 @@
-// 【重要】
-// 開発のためにここに直接記述していますが、本番環境では絶対に避けてください。
-// 環境変数やバックエンドサーバーを使ってキーを秘匿する必要があります。
-// 💡 【修正点１】この行を削除しました。ブラウザでそのまま実行するとエラーになります。
-// import { GoogleGenAI } from '@google/genai'; 
-
-// 【重要】APIキーは必ずご自身のキーに置き換えてください
+// 【重要】APIキーは必ずご自身のキーに置き換えてください。
+// 本番環境ではこの方法は推奨されません。
 const GEMINI_API_KEY = "AIzaSyA8sUHrIX8Hpno-g2-v4rbuaTROAYobXeI";
 
-// Google Gen AI SDKを初期化
-// 💡 【修正点２】グローバル変数 googleGenerativeAI を使用
+// 💡 【修正点】外部CDNで読み込まれたグローバル変数 'googleGenerativeAI' を使用して初期化します。
+// import文はブラウザではエラーになるため、削除しています。
 const ai = new googleGenerativeAI.GoogleGenAI({ apiKey: GEMINI_API_KEY });
-const model = "gemini-2.5-flash"; 
+const model = "gemini-2.5-flash"; // 応答速度と会話に適したモデルを選択
 
 // DOM要素の取得
 const chatBox = document.getElementById('chatBox');
@@ -23,18 +18,12 @@ const recognition = SpeechRecognition ? new SpeechRecognition() : null;
 const synth = window.speechSynthesis;
 
 // 認識設定
-if (!recognition) {
-    // recognitionが null の場合、ブラウザはAPIをサポートしていません
-    statusText.textContent = "お使いのブラウザは音声認識をサポートしていません。";
-    micButton.disabled = true;
-} else {
-    // 💡 このリスナーが実行されればボタンは反応します
-    micButton.addEventListener('click', () => { 
-        if (micButton.classList.contains('recording')) {
-            recognition.stop();
-        } else {
-            startRecognition();
-        }
+if (recognition) {
+    recognition.lang = 'ja-JP'; // 日本語を設定
+    recognition.interimResults = false; // 途中結果は不要
+    recognition.maxAlternatives = 1; // 最も可能性の高い結果のみ
+}
+
 // ----------------------------------------------------
 // UI操作とメッセージ表示
 // ----------------------------------------------------
@@ -64,6 +53,7 @@ if (!recognition) {
     statusText.textContent = "お使いのブラウザは音声認識をサポートしていません。";
     micButton.disabled = true;
 } else {
+    // 💡 イベントリスナーがここで設定されます。スクリプトが停止していなければ動作します。
     micButton.addEventListener('click', () => {
         if (micButton.classList.contains('recording')) {
             // 録音停止
@@ -80,8 +70,11 @@ if (!recognition) {
             micButton.classList.add('recording');
             statusText.textContent = "録音中...話してください";
         } catch (e) {
-            console.error(e);
-            statusText.textContent = "マイクの起動に失敗しました。";
+            // 既に認識が開始されている場合など、エラーをコンソールに出力
+            console.error("Recognition start error:", e);
+            // エラー時もボタンの状態をリセット
+            micButton.classList.remove('recording');
+            statusText.textContent = "待機中... (マイクエラー)";
         }
     }
 
@@ -100,8 +93,9 @@ if (!recognition) {
     // 認識が終了したとき (結果の有無に関わらず)
     recognition.onend = () => {
         micButton.classList.remove('recording');
-        if (statusText.textContent.includes("録音中")) {
-             statusText.textContent = "待機中... (処理中)";
+        // AI応答中の場合はステータスを変更しない
+        if (!statusText.textContent.includes("応答中")) {
+             statusText.textContent = "待機中...";
         }
     };
 
@@ -128,7 +122,8 @@ async function getGeminiResponse(userText) {
             model: model,
             contents: userText,
             config: {
-                // 会話に適した設定をここで追加可能
+                // 会話の性質を定義するためのシステム指示
+                systemInstruction: "あなたはLINEのようなチャットインターフェースで動作する、親しみやすいAIです。ユーザーの音声入力に対して、文字で応答し、簡潔に返答してください。"
             }
         });
 
@@ -140,7 +135,7 @@ async function getGeminiResponse(userText) {
 
     } catch (error) {
         console.error("Gemini API Error:", error);
-        const errorMsg = "AIとの通信中にエラーが発生しました。";
+        const errorMsg = "AIとの通信中にエラーが発生しました。APIキーまたはネットワーク接続を確認してください。";
         appendMessage(errorMsg, 'system');
         speakResponse(errorMsg);
     } finally {
@@ -168,7 +163,8 @@ function speakResponse(text) {
     }
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ja-JP'; // 日本語を設定
+    // 日本語の音声を優先的に選択
+    utterance.lang = 'ja-JP'; 
     
     // 読み上げ開始
     synth.speak(utterance);
